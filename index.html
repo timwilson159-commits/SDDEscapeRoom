@@ -1,0 +1,533 @@
+<title>Vault Breach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap">
+
+<style>
+:root {
+  --bg: #05080d;
+  --panel: #07101a;
+  --door-face: #0e1824;
+  --door-shine: #192638;
+  --rim-dark: #182438;
+  --rim: #263d58;
+  --rim-hi: #3a5878;
+  --chrome: #5e80a0;
+  --chrome-hi: #8ab0d0;
+  --chrome-shine: #a8c8e0;
+  --gold: #a07828;
+  --gold-mid: #c09038;
+  --gold-hi: #dab048;
+  --gold-glow: rgba(192,144,56,0.35);
+  --led-bg: #020a0e;
+  --led: #00d8ff;
+  --led-glow: rgba(0,216,255,0.55);
+  --led-dim: rgba(0,216,255,0.18);
+  --led-border: rgba(0,216,255,0.28);
+  --fail: #ff2244;
+  --fail-glow: rgba(255,34,68,0.55);
+  --ok: #00e87c;
+  --ok-glow: rgba(0,232,124,0.5);
+  --text: #a8c0d8;
+  --text-hi: #c8dcea;
+  --text-muted: #3a5472;
+  --text-faint: #1a3050;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Rajdhani', Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 16px;
+  padding-block: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(0,150,220,0.02) 0, rgba(0,150,220,0.02) 1px, transparent 1px, transparent 40px),
+    repeating-linear-gradient(90deg, rgba(0,150,220,0.02) 0, rgba(0,150,220,0.02) 1px, transparent 1px, transparent 40px);
+  pointer-events: none;
+  z-index: 0;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 35%, rgba(2,4,8,0.75) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrap {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 480px;
+}
+
+/* ── HEADER ── */
+.hdr { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.hdr-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.58rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--text-muted);
+}
+.blink-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--fail); box-shadow: 0 0 5px var(--fail-glow);
+  flex-shrink: 0; animation: dot-blink 1.4s ease-in-out infinite;
+}
+.blink-dot.green { background: var(--ok); box-shadow: 0 0 5px var(--ok-glow); animation: none; }
+@keyframes dot-blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
+.hdr-title { font-size: 1.3rem; font-weight: 700; color: var(--chrome-shine); letter-spacing: 0.18em; text-transform: uppercase; }
+
+/* ── PHASE TRACK ── */
+.phase-track { display: flex; align-items: center; }
+.phase-node { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.phase-pip {
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 1.5px solid var(--text-faint); background: transparent; transition: all 0.4s ease;
+}
+.phase-pip.active { border-color: var(--gold-hi); background: var(--gold-mid); box-shadow: 0 0 7px var(--gold-glow); }
+.phase-pip.done { border-color: var(--ok); background: var(--ok); box-shadow: 0 0 6px var(--ok-glow); }
+.phase-tag { font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-faint); transition: color 0.4s; }
+.phase-tag.active { color: var(--gold-mid); }
+.phase-tag.done { color: var(--ok); opacity: 0.8; }
+.phase-line { width: 48px; height: 1px; background: var(--text-faint); margin: 0 4px; margin-bottom: 14px; transition: background 0.4s; }
+.phase-line.done { background: var(--ok); opacity: 0.5; }
+
+/* ── VAULT DOOR ── */
+.vault {
+  position: relative; width: 285px; height: 285px; flex-shrink: 0;
+  transition: transform 1.6s ease, opacity 1.6s ease;
+  transform-origin: 8% center;
+}
+.vault.opening {
+  transform: perspective(700px) rotateY(-82deg) translateX(-18px);
+  opacity: 0.18;
+}
+
+.v-ring { position: absolute; border-radius: 50%; }
+
+.v-r1 {
+  inset: 0;
+  background: radial-gradient(circle at 36% 30%, var(--door-shine), var(--door-face) 72%);
+  border: 3px solid var(--rim);
+  box-shadow: 0 8px 36px rgba(0,0,0,0.92), 0 0 0 1px rgba(0,0,0,0.6),
+              inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* gold accent ring via box-shadow hack */
+.v-r2 {
+  inset: 11px;
+  background: transparent;
+  box-shadow: 0 0 0 1.5px var(--gold-mid), 0 0 0 3px rgba(0,0,0,0.55),
+              0 0 0 5px var(--gold), 0 0 0 6.5px rgba(0,0,0,0.4);
+}
+
+.v-r3 {
+  inset: 28px;
+  background: radial-gradient(circle at 40% 34%, #1c2c44, var(--rim-dark) 80%);
+  border: 2px solid var(--rim);
+  box-shadow: inset 0 2px 14px rgba(0,0,0,0.7);
+}
+
+/* Tick marks on the combination ring */
+.v-r3::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    rgba(80,120,165,0.4) 0deg 2deg,
+    transparent 2deg 12deg
+  );
+  opacity: 0.55;
+}
+
+.v-r4 {
+  inset: 50px;
+  background: radial-gradient(circle at 44% 40%, #0d1828, #070f18);
+  border: 1.5px solid var(--rim-dark);
+  box-shadow: inset 0 4px 18px rgba(0,0,0,0.85);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 5px; overflow: hidden;
+}
+
+.v-bolt {
+  position: absolute; width: 15px; height: 15px; border-radius: 50%;
+  background: radial-gradient(circle at 38% 30%, var(--chrome), var(--rim-dark) 80%);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.08), 0 2px 5px rgba(0,0,0,0.8);
+  transform: translate(-50%, -50%);
+}
+
+.v-lock {
+  font-size: 2rem; line-height: 1;
+  filter: drop-shadow(0 0 5px var(--fail-glow));
+  transition: filter 0.5s;
+}
+.v-lock.open { filter: drop-shadow(0 0 8px var(--ok-glow)); }
+.v-phase-lbl { font-size: 0.56rem; letter-spacing: 0.3em; color: var(--text-muted); text-transform: uppercase; }
+
+/* ── CODE PANEL ── */
+.code-panel {
+  width: 100%; background: var(--panel);
+  border: 1px solid var(--rim-dark); border-radius: 8px;
+  padding: 16px 14px 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.02), 0 4px 24px rgba(0,0,0,0.7);
+}
+.cp-title { font-size: 0.6rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--text-muted); }
+
+/* ── WHEELS ── */
+.wheels-row { display: flex; align-items: center; gap: 5px; }
+
+.wheel-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.w-arrow {
+  font-size: 0.48rem; color: var(--text-muted); cursor: pointer;
+  padding: 2px 8px; border-radius: 3px; transition: color 0.15s; user-select: none; line-height: 1.2;
+}
+.w-arrow:hover { color: var(--chrome-hi); }
+
+.wheel {
+  width: 50px; height: 114px;
+  overflow: hidden; position: relative;
+  background: var(--led-bg);
+  border: 1.5px solid var(--rim-dark); border-radius: 6px;
+  cursor: pointer; user-select: none;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.92);
+}
+.wheel::before, .wheel::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 33%; z-index: 2; pointer-events: none;
+}
+.wheel::before { top: 0; background: linear-gradient(to bottom, var(--led-bg) 0%, transparent 100%); }
+.wheel::after  { bottom: 0; background: linear-gradient(to top, var(--led-bg) 0%, transparent 100%); }
+
+.wheel-window {
+  position: absolute; inset-inline: 0; top: calc(50% - 19px); height: 38px;
+  border-top: 1px solid var(--led-border); border-bottom: 1px solid var(--led-border);
+  background: rgba(0,216,255,0.04); z-index: 1; pointer-events: none;
+}
+
+.wheel-track {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; flex-direction: column;
+  transform: translateY(0px);
+}
+.w-digit {
+  height: 38px; display: flex; align-items: center; justify-content: center;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 1.5rem; color: var(--led-dim); flex-shrink: 0;
+}
+.w-digit.curr {
+  color: var(--led); font-size: 1.8rem;
+  text-shadow: 0 0 10px var(--led-glow), 0 0 22px rgba(0,216,255,0.25);
+}
+
+.w-zone-up, .w-zone-dn { position: absolute; left: 0; right: 0; height: 50%; z-index: 3; cursor: pointer; }
+.w-zone-up { top: 0; }
+.w-zone-dn { bottom: 0; }
+
+.w-sep { width: 4px; height: 4px; background: var(--text-muted); border-radius: 50%; align-self: center; opacity: 0.3; flex-shrink: 0; }
+
+/* ── STATUS BAR ── */
+.status-bar {
+  min-height: 16px; font-size: 0.62rem; letter-spacing: 0.22em;
+  text-transform: uppercase; text-align: center; color: transparent; transition: color 0.2s, text-shadow 0.2s;
+}
+.status-bar.fail { color: var(--fail); text-shadow: 0 0 8px var(--fail-glow); }
+.status-bar.ok   { color: var(--ok);  text-shadow: 0 0 8px var(--ok-glow); }
+
+/* ── AUTH BUTTON ── */
+.btn-auth {
+  width: 100%; padding: 11px 16px;
+  font-family: 'Rajdhani', sans-serif; font-size: 0.86rem; font-weight: 700;
+  letter-spacing: 0.3em; text-transform: uppercase; color: var(--chrome-hi);
+  background: linear-gradient(160deg, #141f2e, #0d1825);
+  border: 1.5px solid var(--rim); border-radius: 6px; cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.btn-auth:hover {
+  color: #fff; background: linear-gradient(160deg, #1c2e44, #132033);
+  border-color: var(--chrome);
+  box-shadow: 0 0 14px rgba(100,160,210,0.2), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.btn-auth:active { transform: translateY(1px); }
+.btn-auth:disabled { opacity: 0.45; cursor: default; }
+
+/* ── SHAKE ── */
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  15%{transform:translateX(-7px)} 35%{transform:translateX(7px)}
+  55%{transform:translateX(-5px)} 75%{transform:translateX(5px)}
+}
+.shake { animation: shake 0.4s ease; }
+
+/* ── SUCCESS SCREEN ── */
+.success {
+  position: fixed; inset: 0; background: rgba(2,5,10,0.97);
+  z-index: 50; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px; padding-inline: 24px;
+  opacity: 0; pointer-events: none; transition: opacity 0.9s ease;
+}
+.success.show { opacity: 1; pointer-events: all; }
+.success::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg,rgba(0,232,124,0.012) 0,rgba(0,232,124,0.012) 1px,transparent 1px,transparent 4px);
+  pointer-events: none;
+}
+.s-icon { font-size: 3.2rem; animation: glow-pulse 2.2s ease infinite; }
+@keyframes glow-pulse {
+  0%,100%{filter:drop-shadow(0 0 10px var(--ok-glow))}
+  50%{filter:drop-shadow(0 0 28px rgba(0,232,124,0.85))}
+}
+.s-rule { width: 90px; height: 1px; background: linear-gradient(to right, transparent, var(--ok), transparent); }
+.s-title { font-size: 2rem; font-weight: 700; letter-spacing: 0.18em; color: var(--ok); text-shadow: 0 0 22px var(--ok-glow); text-align: center; }
+.s-sub { font-size: 0.82rem; letter-spacing: 0.1em; color: var(--text-muted); text-align: center; max-width: 280px; line-height: 1.75; }
+.s-badge {
+  font-family: 'Share Tech Mono', monospace; font-size: 0.7rem;
+  letter-spacing: 0.3em; color: var(--led);
+  border: 1px solid var(--led-border); padding: 6px 14px; border-radius: 4px;
+  background: rgba(0,216,255,0.04); text-shadow: 0 0 6px var(--led-glow);
+}
+
+@media (max-width: 400px) {
+  .vault { width: 250px; height: 250px; }
+  .wheel { width: 43px; }
+  .wheels-row { gap: 4px; }
+  .w-arrow { padding: 2px 5px; }
+}
+@media (max-height: 680px) {
+  .vault { width: 250px; height: 250px; }
+  .wrap { gap: 10px; }
+}
+</style>
+
+<div class="wrap">
+  <header class="hdr">
+    <div class="hdr-row">
+      <span class="blink-dot" id="statusDot"></span>
+      First National Bank — Security Terminal
+    </div>
+    <div class="hdr-title">Vault Access System</div>
+  </header>
+
+  <div class="phase-track">
+    <div class="phase-node">
+      <div class="phase-pip active" id="pip0"></div>
+      <div class="phase-tag active" id="ptag0">Phase 1</div>
+    </div>
+    <div class="phase-line" id="pline0"></div>
+    <div class="phase-node">
+      <div class="phase-pip" id="pip1"></div>
+      <div class="phase-tag" id="ptag1">Phase 2</div>
+    </div>
+    <div class="phase-line" id="pline1"></div>
+    <div class="phase-node">
+      <div class="phase-pip" id="pip2"></div>
+      <div class="phase-tag" id="ptag2">Phase 3</div>
+    </div>
+  </div>
+
+  <div class="vault" id="vault">
+    <div class="v-ring v-r1" id="vr1"></div>
+    <div class="v-ring v-r2"></div>
+    <div class="v-ring v-r3"></div>
+    <div class="v-ring v-r4">
+      <div class="v-lock" id="lockEmoji">🔒</div>
+      <div class="v-phase-lbl" id="doorLabel">Phase 1</div>
+    </div>
+  </div>
+
+  <div class="code-panel" id="codePanel">
+    <div class="cp-title" id="cpTitle">Phase 1 — Authorization Code</div>
+    <div class="wheels-row" id="wheelsRow"></div>
+    <div class="status-bar" id="statusBar"> </div>
+    <button class="btn-auth" id="btnAuth">Confirm Authorization</button>
+  </div>
+</div>
+
+<div class="success" id="successScreen">
+  <div class="s-icon">🏦</div>
+  <div class="s-rule"></div>
+  <div class="s-title">Vault Unlocked</div>
+  <div class="s-rule"></div>
+  <div class="s-sub">All three authorization phases complete.<br>Full vault access has been granted.</div>
+  <div class="s-badge">ACCESS GRANTED · ALL PHASES CLEARED</div>
+</div>
+
+<script>
+'use strict';
+const CODES = ['21490', '12148', '01912'];
+const N = 5;
+let phase = 0;
+let vals = Array(N).fill(0);
+let spinLock = {};
+
+function buildBolts() {
+  const ring = document.getElementById('vr1');
+  const SIZE = document.getElementById('vault').offsetWidth || 285;
+  const cx = SIZE / 2, cy = SIZE / 2, r = SIZE * 0.447;
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 - Math.PI / 2;
+    const b = document.createElement('div');
+    b.className = 'v-bolt';
+    b.style.left = (cx + r * Math.cos(a)) + 'px';
+    b.style.top  = (cy + r * Math.sin(a)) + 'px';
+    ring.appendChild(b);
+  }
+}
+
+function buildWheels() {
+  const row = document.getElementById('wheelsRow');
+  row.innerHTML = '';
+  vals = Array(N).fill(0);
+  spinLock = {};
+  for (let i = 0; i < N; i++) {
+    const wrap = document.createElement('div');
+    wrap.className = 'wheel-wrap';
+
+    const upArr = document.createElement('div');
+    upArr.className = 'w-arrow'; upArr.textContent = '▲';
+    upArr.addEventListener('click', () => spin(i, -1));
+
+    const wEl = document.createElement('div');
+    wEl.className = 'wheel'; wEl.id = 'w' + i;
+
+    const win = document.createElement('div'); win.className = 'wheel-window';
+    wEl.appendChild(win);
+
+    const track = document.createElement('div');
+    track.className = 'wheel-track'; track.id = 'wt' + i;
+    wEl.appendChild(track);
+
+    const zu = document.createElement('div'); zu.className = 'w-zone-up';
+    zu.addEventListener('click', () => spin(i, -1));
+    const zd = document.createElement('div'); zd.className = 'w-zone-dn';
+    zd.addEventListener('click', () => spin(i,  1));
+    wEl.appendChild(zu); wEl.appendChild(zd);
+
+    wEl.addEventListener('wheel', e => { e.preventDefault(); spin(i, e.deltaY > 0 ? 1 : -1); }, { passive: false });
+
+    const dnArr = document.createElement('div');
+    dnArr.className = 'w-arrow'; dnArr.textContent = '▼';
+    dnArr.addEventListener('click', () => spin(i, 1));
+
+    wrap.appendChild(upArr); wrap.appendChild(wEl); wrap.appendChild(dnArr);
+    row.appendChild(wrap);
+    if (i === 1) { const sep = document.createElement('div'); sep.className = 'w-sep'; row.appendChild(sep); }
+    renderWheel(i);
+  }
+}
+
+function renderWheel(i) {
+  const track = document.getElementById('wt' + i);
+  const v = vals[i];
+  const digits = [(v - 1 + 10) % 10, v, (v + 1) % 10];
+  track.innerHTML = '';
+  digits.forEach((d, idx) => {
+    const el = document.createElement('div');
+    el.className = 'w-digit' + (idx === 1 ? ' curr' : '');
+    el.textContent = String(d);
+    if (idx !== 1) el.style.opacity = '0.28';
+    track.appendChild(el);
+  });
+  track.style.transform = 'translateY(0px)';
+}
+
+function spin(i, dir) {
+  if (spinLock[i]) return;
+  spinLock[i] = true;
+  const track = document.getElementById('wt' + i);
+  track.style.transition = 'transform 0.1s ease';
+  track.style.transform = 'translateY(' + (dir > 0 ? -38 : 38) + 'px)';
+  setTimeout(() => {
+    vals[i] = (vals[i] + dir + 10) % 10;
+    track.style.transition = 'none';
+    renderWheel(i);
+    spinLock[i] = false;
+  }, 95);
+  clearStatus();
+}
+
+function clearStatus() {
+  const bar = document.getElementById('statusBar');
+  bar.textContent = ' '; bar.className = 'status-bar';
+}
+function setStatus(msg, type) {
+  const bar = document.getElementById('statusBar');
+  bar.textContent = msg; bar.className = 'status-bar ' + type;
+}
+
+function checkCode() {
+  const entered = vals.join('');
+  if (entered === CODES[phase]) {
+    setStatus('Authorization accepted', 'ok');
+    document.getElementById('btnAuth').disabled = true;
+    setTimeout(nextPhase, 900);
+  } else {
+    setStatus('Access denied — invalid code', 'fail');
+    const panel = document.getElementById('codePanel');
+    panel.classList.add('shake');
+    setTimeout(() => panel.classList.remove('shake'), 420);
+    for (let i = 0; i < N; i++) {
+      const w = document.getElementById('w' + i);
+      w.style.borderColor = 'var(--fail)';
+      w.style.boxShadow = 'inset 0 0 8px rgba(255,34,68,0.25)';
+    }
+    setTimeout(() => {
+      for (let i = 0; i < N; i++) {
+        const w = document.getElementById('w' + i);
+        w.style.borderColor = ''; w.style.boxShadow = '';
+      }
+    }, 650);
+  }
+}
+
+function nextPhase() {
+  document.getElementById('pip' + phase).className = 'phase-pip done';
+  document.getElementById('ptag' + phase).className = 'phase-tag done';
+  if (phase < 2) document.getElementById('pline' + phase).classList.add('done');
+  phase++;
+  if (phase >= CODES.length) { finalize(); return; }
+  document.getElementById('pip' + phase).className = 'phase-pip active';
+  document.getElementById('ptag' + phase).className = 'phase-tag active';
+  document.getElementById('doorLabel').textContent = 'Phase ' + (phase + 1);
+  document.getElementById('cpTitle').textContent = 'Phase ' + (phase + 1) + ' — Authorization Code';
+  clearStatus();
+  document.getElementById('btnAuth').disabled = false;
+  buildWheels();
+}
+
+function finalize() {
+  document.getElementById('statusDot').classList.add('green');
+  document.getElementById('lockEmoji').textContent = '🔓';
+  document.getElementById('lockEmoji').classList.add('open');
+  document.getElementById('doorLabel').textContent = 'Unlocked';
+  document.getElementById('vault').classList.add('opening');
+  setTimeout(() => document.getElementById('successScreen').classList.add('show'), 1500);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') checkCode(); });
+document.getElementById('btnAuth').addEventListener('click', checkCode);
+
+window.addEventListener('load', () => { buildBolts(); buildWheels(); });
+</script>
