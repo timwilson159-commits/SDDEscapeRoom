@@ -49,7 +49,7 @@ body {
   padding-inline: 16px;
   padding-block: 20px;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 body::after {
@@ -311,39 +311,30 @@ body::before {
   background: rgba(0,216,255,0.04); text-shadow: 0 0 6px var(--led-glow);
 }
 
-/* ── PHONE (narrow or short) ── */
+/* ── PHONE ── shrink decoration, NOT the interactive wheels ── */
 @media (max-width: 480px) {
-  :root { --dh: 34px; }
-  body { padding-block: 10px; }
-  .wrap { gap: 9px; }
-  .hdr-title { font-size: 1.1rem; }
-  .hdr-row { font-size: 0.52rem; letter-spacing: 0.28em; }
-  .phase-line { width: 36px; }
-  .vault { width: 230px; height: 230px; }
-  .wheel { width: 44px; }
-  .wheels-row { gap: 4px; }
-  .w-arrow { padding: 1px 6px; }
-  .code-panel { padding: 11px 12px 10px; gap: 9px; }
-  .btn-auth { padding: 9px 14px; font-size: 0.8rem; }
-}
+  body { padding-block: 10px; overflow-y: auto; justify-content: flex-start; }
+  .wrap { gap: 10px; padding-block: 4px; }
 
-@media (max-height: 700px) {
-  :root { --dh: 32px; }
-  body { padding-block: 8px; }
-  .wrap { gap: 8px; }
-  .hdr-title { font-size: 1.05rem; }
-  .vault { width: 210px; height: 210px; }
-  .wheel { width: 44px; }
-  .wheels-row { gap: 4px; }
-  .code-panel { padding: 10px 12px 9px; gap: 8px; }
-  .btn-auth { padding: 8px 14px; font-size: 0.78rem; }
-  .status-bar { min-height: 14px; font-size: 0.58rem; }
-}
+  .hdr { gap: 3px; }
+  .hdr-row { font-size: 0.5rem; letter-spacing: 0.28em; }
+  .hdr-title { font-size: 1.05rem; letter-spacing: 0.14em; }
 
-/* both narrow AND short (small phone) */
-@media (max-width: 480px) and (max-height: 700px) {
-  :root { --dh: 30px; }
-  .vault { width: 195px; height: 195px; }
+  .phase-line { width: 32px; }
+  .phase-tag { font-size: 0.5rem; }
+
+  /* vault door: decorative only — shrink hard */
+  .vault { width: 170px; height: 170px; }
+
+  /* wheels: keep full tap-friendly size */
+  .wheel { width: 52px; }
+  .wheels-row { gap: 6px; }
+  .w-arrow { font-size: 0.55rem; padding: 3px 10px; }
+
+  /* code panel: normal sizing */
+  .code-panel { padding: 14px 14px 12px; gap: 11px; }
+  .cp-title { font-size: 0.6rem; }
+  .btn-auth { padding: 12px 16px; font-size: 0.88rem; }
 }
 </style>
 
