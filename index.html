@@ -311,28 +311,45 @@ body::before {
   background: rgba(0,216,255,0.04); text-shadow: 0 0 6px var(--led-glow);
 }
 
-/* ── PHONE ── */
+/* ── PHONE: fill the full screen ── */
 @media (max-width: 480px) {
-  body { padding-block: 10px; overflow-y: auto; }
-  .wrap { gap: 10px; }
+  :root { --dh: 46px; }
+
+  html, body { height: 100%; }
+  body {
+    padding: 0;
+    justify-content: flex-start;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  .wrap {
+    height: 100%;
+    max-width: 100%;
+    padding: 14px 16px 18px;
+    gap: 0;
+    justify-content: space-between;
+  }
 
   .hdr { gap: 3px; }
   .hdr-row { font-size: 0.5rem; letter-spacing: 0.26em; }
-  .hdr-title { font-size: 1.05rem; letter-spacing: 0.13em; }
+  .hdr-title { font-size: 1.1rem; letter-spacing: 0.13em; }
 
   .phase-line { width: 32px; }
   .phase-tag { font-size: 0.5rem; }
 
-  /* vault door: fill most of the screen width */
-  .vault { width: min(68vw, 285px); height: min(68vw, 285px); }
+  /* vault fills the screen width */
+  .vault { width: min(72vw, 285px); height: min(72vw, 285px); }
 
-  /* wheels: comfortably tap-sized */
-  .wheel { width: 52px; }
+  /* bigger, tap-friendly wheels */
+  .wheel { width: 56px; }
   .wheels-row { gap: 6px; }
-  .w-arrow { font-size: 0.55rem; padding: 3px 10px; }
+  .w-arrow { font-size: 0.6rem; padding: 4px 12px; }
 
-  .code-panel { padding: 14px 14px 12px; gap: 11px; }
-  .btn-auth { padding: 12px 16px; font-size: 0.88rem; }
+  .code-panel { padding: 16px 14px 14px; gap: 12px; }
+  .cp-title { font-size: 0.62rem; }
+  .btn-auth { padding: 14px 16px; font-size: 0.9rem; }
+  .status-bar { font-size: 0.62rem; }
 }
 </style>
 
