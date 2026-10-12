@@ -4,6 +4,7 @@
 
 <style>
 :root {
+  --dh: 38px;
   --bg: #05080d;
   --panel: #07101a;
   --door-face: #0e1824;
@@ -206,7 +207,7 @@ body::before {
 .w-arrow:hover { color: var(--chrome-hi); }
 
 .wheel {
-  width: 50px; height: 114px;
+  width: 50px; height: calc(var(--dh) * 3);
   overflow: hidden; position: relative;
   background: var(--led-bg);
   border: 1.5px solid var(--rim-dark); border-radius: 6px;
@@ -220,7 +221,8 @@ body::before {
 .wheel::after  { bottom: 0; background: linear-gradient(to top, var(--led-bg) 0%, transparent 100%); }
 
 .wheel-window {
-  position: absolute; inset-inline: 0; top: calc(50% - 19px); height: 38px;
+  position: absolute; inset-inline: 0;
+  top: calc(50% - var(--dh) / 2); height: var(--dh);
   border-top: 1px solid var(--led-border); border-bottom: 1px solid var(--led-border);
   background: rgba(0,216,255,0.04); z-index: 1; pointer-events: none;
 }
@@ -231,7 +233,7 @@ body::before {
   transform: translateY(0px);
 }
 .w-digit {
-  height: 38px; display: flex; align-items: center; justify-content: center;
+  height: var(--dh); display: flex; align-items: center; justify-content: center;
   font-family: 'Share Tech Mono', 'Courier New', monospace;
   font-size: 1.5rem; color: var(--led-dim); flex-shrink: 0;
 }
@@ -309,15 +311,39 @@ body::before {
   background: rgba(0,216,255,0.04); text-shadow: 0 0 6px var(--led-glow);
 }
 
-@media (max-width: 400px) {
-  .vault { width: 250px; height: 250px; }
-  .wheel { width: 43px; }
+/* ── PHONE (narrow or short) ── */
+@media (max-width: 480px) {
+  :root { --dh: 34px; }
+  body { padding-block: 10px; }
+  .wrap { gap: 9px; }
+  .hdr-title { font-size: 1.1rem; }
+  .hdr-row { font-size: 0.52rem; letter-spacing: 0.28em; }
+  .phase-line { width: 36px; }
+  .vault { width: 230px; height: 230px; }
+  .wheel { width: 44px; }
   .wheels-row { gap: 4px; }
-  .w-arrow { padding: 2px 5px; }
+  .w-arrow { padding: 1px 6px; }
+  .code-panel { padding: 11px 12px 10px; gap: 9px; }
+  .btn-auth { padding: 9px 14px; font-size: 0.8rem; }
 }
-@media (max-height: 680px) {
-  .vault { width: 250px; height: 250px; }
-  .wrap { gap: 10px; }
+
+@media (max-height: 700px) {
+  :root { --dh: 32px; }
+  body { padding-block: 8px; }
+  .wrap { gap: 8px; }
+  .hdr-title { font-size: 1.05rem; }
+  .vault { width: 210px; height: 210px; }
+  .wheel { width: 44px; }
+  .wheels-row { gap: 4px; }
+  .code-panel { padding: 10px 12px 9px; gap: 8px; }
+  .btn-auth { padding: 8px 14px; font-size: 0.78rem; }
+  .status-bar { min-height: 14px; font-size: 0.58rem; }
+}
+
+/* both narrow AND short (small phone) */
+@media (max-width: 480px) and (max-height: 700px) {
+  :root { --dh: 30px; }
+  .vault { width: 195px; height: 195px; }
 }
 </style>
 
@@ -381,6 +407,10 @@ const N = 5;
 let phase = 0;
 let vals = Array(N).fill(0);
 let spinLock = {};
+
+function getDigitH() {
+  return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--dh')) || 38;
+}
 
 function buildBolts() {
   const ring = document.getElementById('vr1');
@@ -457,8 +487,9 @@ function spin(i, dir) {
   if (spinLock[i]) return;
   spinLock[i] = true;
   const track = document.getElementById('wt' + i);
+  const dh = getDigitH();
   track.style.transition = 'transform 0.1s ease';
-  track.style.transform = 'translateY(' + (dir > 0 ? -38 : 38) + 'px)';
+  track.style.transform = 'translateY(' + (dir > 0 ? -dh : dh) + 'px)';
   setTimeout(() => {
     vals[i] = (vals[i] + dir + 10) % 10;
     track.style.transition = 'none';
